@@ -21,6 +21,7 @@ class User extends Authenticatable
         'referred_by',
         'balance',
         'is_verified',
+        'role',
     ];
 
     protected $hidden = [
@@ -33,6 +34,7 @@ class User extends Authenticatable
         'password' => 'hashed',
         'balance' => 'decimal:2',
         'is_verified' => 'boolean',
+        'role' => 'string',
     ];
 
     protected static function boot()
@@ -80,5 +82,21 @@ class User extends Authenticatable
     public function notifications()
     {
         return $this->hasMany(Notification::class);
+    }
+
+    // Role helper methods
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isUser(): bool
+    {
+        return $this->role === 'user';
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
     }
 }
