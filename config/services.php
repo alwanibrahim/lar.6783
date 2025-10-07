@@ -34,5 +34,12 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'tripay' => [
+        'base_url' => env('TRIPAY_BASE_URL', 'https://tripay.co.id/api-sandbox'),
+        'api_key' => env('TRIPAY_API_KEY'),
+        'merchant_code' => env('TRIPAY_MERCHANT'),
+        'private_key' => env('TRIPAY_PRIVATE_KEY'),
+    ],
+
 
 ];

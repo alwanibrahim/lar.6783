@@ -26,7 +26,7 @@ class TransactionController extends Controller
         // panggil Tripay API
         $response = Http::withToken(env('TRIPAY_API_KEY'))
             ->post('https://tripay.co.id/api-sandbox/transaction/create', [
-                'method' => $method,
+                'method' => 'QRIS',
                 'merchant_ref' => $merchantRef,
                 'amount' => $amount,
                 'customer_name' => $request->input('customer_name'),

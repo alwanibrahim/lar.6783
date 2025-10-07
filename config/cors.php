@@ -6,8 +6,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000'],
-
+    'allowed_origins' => [
+    'http://localhost:3000',
+    'https://b746beb60fb1.ngrok-free.app',
+],
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],

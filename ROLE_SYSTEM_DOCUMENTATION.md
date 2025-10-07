@@ -156,3 +156,5 @@ php artisan db:seed
 - User biasa tidak bisa mengakses route admin
 - Middleware memvalidasi authentication terlebih dahulu
 - Response error yang jelas untuk unauthorized access
+
+

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\OtpCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -97,7 +98,6 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'code' => 'required|string|size:6',
-            'type' => 'required|in:email,sms',
         ]);
 
         if ($validator->fails()) {
@@ -105,9 +105,13 @@ class AuthController extends Controller
         }
 
         $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $otp = OtpCode::where('user_id', $user->id)
             ->where('code', $request->code)
-            ->where('type', $request->type)
+            ->where('type', 'email')
             ->where('status', 'pending')
             ->first();
 
@@ -116,33 +120,36 @@ class AuthController extends Controller
         }
 
         if ($otp->isExpired()) {
-            $otp->update(['status' => 'expired']);
+            if ($otp->status !== 'expired') {
+                $otp->update(['status' => 'expired']);
+            }
             return response()->json(['message' => 'OTP code has expired'], 400);
         }
+
 
         $otp->update(['status' => 'used']);
         $user->update(['is_verified' => true]);
 
-
-
-        return response()->json(['message' => 'OTP verified successfully']);
+        return response()->json([
+            'message' => 'OTP verified successfully',
+            'user' => $user,
+            'verified' => true,
+        ]);
     }
+
+
 
     public function resendOtp(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'type' => 'required|in:email,sms',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
 
         // Expire old OTPs
         OtpCode::where('user_id', $user->id)
-            ->where('type', $request->type)
+            ->where('type', 'email')
             ->where('status', 'pending')
             ->update(['status' => 'expired']);
 
@@ -150,38 +157,40 @@ class AuthController extends Controller
         $otp = OtpCode::create([
             'user_id' => $user->id,
             'code' => random_int(100000, 999999),
-            'type' => $request->type,
+            'type' => 'email', // ✅ default fix ke email
             'expires_at' => now()->addMinutes(10),
         ]);
 
         // Kirim OTP via Email
-        if ($request->type === 'email') {
-            $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', env('BREVO_API_KEY'));
-            $apiInstance = new TransactionalEmailsApi(new \GuzzleHttp\Client(), $config);
+        $config = Configuration::getDefaultConfiguration()
+            ->setApiKey('api-key', env('BREVO_API_KEY'));
+        $apiInstance = new TransactionalEmailsApi(new \GuzzleHttp\Client(), $config);
 
-            $email = new SendSmtpEmail([
-                'subject' => 'Your OTP Code',
-                'sender' => [
-                    'name' => 'vega.vaul',
-                    'email' => 'admin@vaultsy.online'
-                ],
-                'to' => [[
-                    'email' => $user->email,
-                    'name' => $user->name
-                ]],
-                'htmlContent' => "<p>Use this OTP to verify your account: <strong>{$otp->code}</strong></p>"
-            ]);
+        $email = new SendSmtpEmail([
+            'subject' => 'Your OTP Code',
+            'sender' => [
+                'name' => 'vega.vaul',
+                'email' => 'admin@vaultsy.online'
+            ],
+            'to' => [[
+                'email' => $user->email,
+                'name' => $user->name
+            ]],
+            'htmlContent' => "<p>Use this OTP to verify your account: <strong>{$otp->code}</strong></p>"
+        ]);
 
-            try {
-                $apiInstance->sendTransacEmail($email);
-            } catch (\Exception $e) {
-                return response()->json(['error' => 'Failed to send OTP: ' . $e->getMessage()], 500);
-            }
+        try {
+            $apiInstance->sendTransacEmail($email);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to send OTP: ' . $e->getMessage()
+            ], 500);
         }
 
-        // Jika ingin tambah SMS, nanti implementasi di sini (Brevo juga support SMS)
-
-        return response()->json(['message' => 'OTP sent successfully']);
+        return response()->json([
+            'message' => 'OTP sent successfully',
+            'otp_id' => $otp->id,
+        ]);
     }
 
 

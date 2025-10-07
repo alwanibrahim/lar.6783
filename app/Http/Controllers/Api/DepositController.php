@@ -21,7 +21,7 @@ class DepositController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'method'  => 'required|string',
+
             'amount'  => 'required|numeric|min:1000',
         ]);
 
@@ -41,13 +41,14 @@ class DepositController extends Controller
             'amount'         => $request->amount,
             'status'         => 'pending',
             'reference'      => $merchantRef,
-            'payment_method' => $request->input('method'),
+            'payment_method' => 'QRIS',
         ]);
 
         // request ke Tripay
-        $response = Http::withToken(env('TRIPAY_API_KEY'))
-            ->post('https://tripay.co.id/api-sandbox/transaction/create', [
-                'method'         => $request->input('method'),
+        $response = Http::withToken(config('services.tripay.api_key'))
+            ->post(config('services.tripay.base_url') . '/transaction/create', [
+
+                'method'         => "QRIS",
                 'merchant_ref'   => $merchantRef,
                 'amount'         => $request->amount,
                 'customer_name'  => $user->name,
@@ -66,11 +67,12 @@ class DepositController extends Controller
             ])->json();
 
         // update deposit dengan payment_url (kalau Tripay sukses)
-        if (isset($response['data']['checkout_url'])) {
+        if (isset($response['data']['qr_url'])) {
             $deposit->update([
-                'payment_url' => $response['data']['checkout_url'],
+                'payment_url' => $response['data']['qr_url'],
             ]);
         }
+
 
         return response()->json([
             'message' => 'Deposit created',

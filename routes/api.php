@@ -18,6 +18,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+
 // Public routes (no authentication required)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -25,6 +26,7 @@ Route::post('/transaction/create', [TransactionController::class, 'create']);
 
 // Authenticated routes (accessible by both user and admin)
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('products', [ProductController::class, 'index']);
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
@@ -33,7 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Deposit routes (user can create and view their own deposits)
     Route::apiResource('deposits', DepositController::class)->except(['update', 'destroy']);
-    
+
     // Distribution routes (user can create and view their own distributions)
     Route::apiResource('distributions', DistributionController::class)->except(['update', 'destroy']);
 
@@ -52,12 +54,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // Category routes (read only for users)
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{category}', [CategoryController::class, 'show']);
+    Route::get('products/{product}', [ProductController::class, 'show']);
 });
 
 // Admin only routes
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::post('products', [ProductController::class, 'store']);
+    Route::put('products/{product}', [ProductController::class, 'update']);
+    Route::delete('products/{product}', [ProductController::class, 'destroy']);
+
     // Product management (admin only)
-    Route::apiResource('products', ProductController::class);
     Route::post('/products/{product}/accounts', [ProductController::class, 'addAccount']);
     Route::post('/products/{product}/invites', [ProductController::class, 'addInvite']);
 

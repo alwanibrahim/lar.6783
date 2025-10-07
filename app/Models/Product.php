@@ -13,12 +13,18 @@ class Product extends Model
         'name',
         'type',
         'price',
+        'original_price',
         'description',
-        'category_id'
+        'category_id',
+        'features',
+        'image_url',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'original_price' => 'decimal:2',
+        'features' => 'array',
+        'image_url' => 'string',
     ];
 
     public function accounts()
@@ -39,5 +45,10 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
     }
 }

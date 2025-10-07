@@ -13,7 +13,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['category', 'accounts', 'invites'])
+        $products = Product::with(['category', 'accounts', 'invites', 'variants'])
             ->paginate(15);
 
         return response()->json($products);
@@ -25,6 +25,7 @@ class ProductController extends Controller
             'name'        => 'required|string|max:255',
             'type'        => 'required|in:account,invite,family',
             'price'       => 'required|numeric|min:0',
+            'original_price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
         ]);
@@ -53,6 +54,7 @@ class ProductController extends Controller
             'name'        => 'sometimes|string|max:255',
             'type'        => 'sometimes|in:account,invite,family',
             'price'       => 'sometimes|numeric|min:0',
+            'original_price' => 'sometimes|numeric|min:0',
             'description' => 'nullable|string',
             'category_id' => 'sometimes|exists:categories,id',
         ]);
