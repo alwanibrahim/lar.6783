@@ -15,8 +15,19 @@ class ProductVariant extends Model
         'duration',
         'price',
         'original_price',
+        'status'
     ];
 
+    protected $casts = [
+        'price' => 'decimal:2',
+        'original_price' => 'decimal:2',
+
+    ];
+
+    public function getIsReadyAttribute(): bool
+    {
+        return $this->status === 'READY';
+    }
     public function product()
     {
         return $this->belongsTo(Product::class);

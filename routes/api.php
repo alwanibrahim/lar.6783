@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\DistributionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\AffiliateController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ProductVariantController;
 
 
 
@@ -27,6 +28,8 @@ Route::post('/transaction/create', [TransactionController::class, 'create']);
 // Authenticated routes (accessible by both user and admin)
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('products', [ProductController::class, 'index']);
+    Route::apiResource('product-variants', \App\Http\Controllers\Api\ProductVariantController::class);
+
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
